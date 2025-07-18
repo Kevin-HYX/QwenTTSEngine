@@ -26,6 +26,7 @@ class QwenTTSEngine {
         document.getElementById('apiKeyInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.saveApiKey();
         });
+        document.getElementById('closeApiKeyModal').addEventListener('click', () => this.closeApiKeyModal());
 
         // 文本输入相关
         const textInput = document.getElementById('textInput');
@@ -58,8 +59,8 @@ class QwenTTSEngine {
         // 点击空白处关闭下拉菜单
         document.addEventListener('click', () => this.hideDropdown());
 
-        // 关闭模态框
-        document.querySelectorAll('.modal').forEach(modal => {
+        // 关闭模态框 - 排除API密钥模态框
+        document.querySelectorAll('.modal:not(#apiKeyModal)').forEach(modal => {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     this.closeModal(modal.id);
@@ -75,22 +76,198 @@ class QwenTTSEngine {
         });
     }
 
-    showApiKeyModal() {
-        document.getElementById('apiKeyModal').classList.add('show');
+    showApiKeyModal(isInitial = true) {
+        const modal = document.getElementById('apiKeyModal');
+        const closeButton = document.getElementById('closeApiKeyModal');
+        const message = document.getElementById('apiKeyMessage');
+        
+        modal.classList.add('show');
+        
+        if (isInitial) {
+            // 首次设置，隐藏关闭按钮并修改提示信息
+            closeButton.style.display = 'none';
+            message.textContent = '首次使用需要输入阿里云百炼平台的API密钥';
+        } else {
+            // 后续设置，显示关闭按钮
+            closeButton.style.display = 'inline-block';
+            message.textContent = '请重新输入阿里云百炼平台的API密钥';
+        }
+        
         setTimeout(() => document.getElementById('apiKeyInput').focus(), 100);
     }
 
-    saveApiKey() {
+    closeApiKeyModal() {
+        this.closeModal('apiKeyModal');
+        // 清除输入框
+        document.getElementById('apiKeyInput').value = '';
+    }
+
+    async saveApiKey() {
         const apiKey = document.getElementById('apiKeyInput').value.trim();
         if (!apiKey) {
-            alert('请输入有效的API密钥');
+            this.showValidationError('请输入有效的API密钥');
             return;
         }
 
-        this.apiKey = apiKey;
-        localStorage.setItem('qwen_tts_api_key', apiKey);
-        this.closeModal('apiKeyModal');
-        this.showMainApp();
+        // 显示验证状态
+        this.showValidationState('正在验证API密钥...');
+
+        try {
+            const isValid = await this.validateApiKey(apiKey);
+            
+            if (isValid) {
+                // API密钥有效
+                this.apiKey = apiKey;
+                localStorage.setItem('qwen_tts_api_key', apiKey);
+                this.showValidationSuccess('API密钥验证成功！');
+                
+                setTimeout(() => {
+                    this.closeModal('apiKeyModal');
+                    this.showMainApp();
+                }, 1000);
+            } else {
+                // API密钥无效
+                this.showValidationError('API密钥无效，请重新输入');
+            }
+        } catch (error) {
+            this.showValidationError('验证失败：' + error.message);
+        }
+    }
+
+    async validateApiKey(apiKey) {
+        // 发送一个简单的验证请求到API
+        try {
+            const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: 'qwen-tts-latest',
+                    input: {
+                        text: "测试",
+                        voice: "Chelsie"
+                    },
+                    stream: false
+                })
+            });
+
+            // 如果返回401或403，表示API密钥无效
+            if (response.status === 401 || response.status === 403) {
+                return false;
+            }
+
+            // 其他状态码（包括200）都认为密钥是有效的
+            // 因为即使是配额用尽，密钥本身也是有效的
+            return true;
+        } catch (error) {
+            // 网络错误也返回true，避免频繁验证
+            console.warn('网络验证失败，但允许继续：', error);
+            return true;
+        }
+    }
+
+    showValidationState(message) {
+        const saveBtn = document.getElementById('saveApiKey');
+        const originalText = saveBtn.innerHTML;
+        
+        saveBtn.innerHTML = `
+            <i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i>
+            ${message}
+        `;
+        saveBtn.disabled = true;
+        
+        // 添加验证状态样式
+        const modalContent = document.querySelector('#apiKeyModal .modal-content');
+        this.removeValidationMessages();
+        
+        const statusDiv = document.createElement('div');
+        statusDiv.className = 'validation-status';
+        statusDiv.innerHTML = message;
+        statusDiv.style.cssText = `
+            background: var(--info-light);
+            color: var(--info-color);
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid var(--info-color);
+            text-align: center;
+            font-size: 14px;
+        `;
+        modalContent.appendChild(statusDiv);
+    }
+
+    showValidationSuccess(message) {
+        const saveBtn = document.getElementById('saveApiKey');
+        const modalContent = document.querySelector('#apiKeyModal .modal-content');
+        
+        this.removeValidationMessages();
+        
+        const successDiv = document.createElement('div');
+        successDiv.className = 'validation-success';
+        successDiv.innerHTML = `
+            <i class="fas fa-check-circle" style="margin-right: 8px;"></i>
+            ${message}
+        `;
+        successDiv.style.cssText = `
+            background: var(--success-light);
+            color: var(--success-color);
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid var(--success-color);
+            text-align: center;
+            font-size: 14px;
+            animation: fadeIn 0.3s ease;
+        `;
+        modalContent.appendChild(successDiv);
+        
+        // 更新按钮状态
+        saveBtn.innerHTML = '<i class="fas fa-check" style="margin-right: 8px;"></i>验证成功';
+        saveBtn.style.background = 'var(--success-color)';
+    }
+
+    showValidationError(message) {
+        const saveBtn = document.getElementById('saveApiKey');
+        const modalContent = document.querySelector('#apiKeyModal .modal-content');
+        
+        this.removeValidationMessages();
+        
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'validation-error';
+        errorDiv.innerHTML = `
+            <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+            ${message}
+        `;
+        errorDiv.style.cssText = `
+            background: var(--danger-light);
+            color: var(--danger-color);
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid var(--danger-color);
+            text-align: center;
+            font-size: 14px;
+            animation: fadeIn 0.3s ease;
+        `;
+        modalContent.appendChild(errorDiv);
+        
+        // 恢复按钮状态
+        saveBtn.innerHTML = '重新输入';
+        saveBtn.disabled = false;
+    }
+
+    removeValidationMessages() {
+        const modalContent = document.querySelector('#apiKeyModal .modal-content');
+        const messages = modalContent.querySelectorAll('.validation-status, .validation-success, .validation-error');
+        messages.forEach(msg => msg.remove());
+        
+        // 恢复按钮原始状态
+        const saveBtn = document.getElementById('saveApiKey');
+        saveBtn.innerHTML = '保存';
+        saveBtn.disabled = false;
+        saveBtn.style.background = '';
     }
 
     resetApiKey() {
@@ -204,46 +381,82 @@ class QwenTTSEngine {
     }
 
     async callTTSAPI(text, voice) {
-        const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${this.apiKey}`,
-                'Content-Type': 'application/json',
-                'X-DashScope-SSE': 'enable'
-            },
-            body: JSON.stringify({
-                model: 'qwen-tts',
-                input: {
-                    text: text,
-                    voice: voice
+        try {
+            const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: 'qwen-tts-latest',
+                    input: {
+                        text: text,
+                        voice: voice
+                    },
+                    stream: false
+                })
+            });
+
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    // API密钥无效或权限问题
+                    this.handleInvalidApiKey();
+                    throw new Error('API密钥无效或已过期，请重新设置');
+                } else if (response.status === 429) {
+                    throw new Error('请求过于频繁，请稍后再试');
+                } else if (response.status === 500) {
+                    throw new Error('服务器内部错误，请稍后再试');
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-            })
-        });
+            }
 
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            const data = await response.json();
+            
+            if (data.error) {
+                // 处理API返回的错误
+                if (data.error.code === 'InvalidApiKey' || data.error.code === 'AuthenticationError') {
+                    this.handleInvalidApiKey();
+                    throw new Error('API密钥无效，请重新设置');
+                }
+                throw new Error(data.error.message || 'API调用失败');
+            }
+
+            // 验证API响应结构
+            if (!data.output || !data.output.audio) {
+                throw new Error('API响应格式错误');
+            }
+
+            // 根据技术文档解析响应格式
+            const audioData = data.output.audio;
+            
+            // 非流式输出返回音频URL
+            if (audioData.url) {
+                // 获取音频文件
+                const audioResponse = await fetch(audioData.url);
+                if (!audioResponse.ok) {
+                    throw new Error('无法获取音频文件');
+                }
+                return await audioResponse.blob();
+            } else if (audioData.data) {
+                // 处理Base64音频数据
+                const audioBase64 = audioData.data;
+                const binaryString = atob(audioBase64);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                return new Blob([bytes], { type: 'audio/wav' });
+            } else {
+                throw new Error('音频数据格式不正确');
+            }
+        } catch (error) {
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                throw new Error('网络连接失败，请检查网络连接');
+            }
+            throw error;
         }
-
-        const data = await response.json();
-        
-        if (data.error) {
-            throw new Error(data.error.message || 'API调用失败');
-        }
-
-        // 处理Base64音频数据
-        const audioBase64 = data.output?.audio || data.audio;
-        if (!audioBase64) {
-            throw new Error('未收到音频数据');
-        }
-
-        // 将Base64转换为Blob
-        const binaryString = atob(audioBase64);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
-        }
-
-        return new Blob([bytes], { type: 'audio/wav' });
     }
 
     playAudio(audioBlob) {
@@ -251,19 +464,17 @@ class QwenTTSEngine {
         const audioPlayer = document.getElementById('audioPlayer');
         const audioContainer = document.querySelector('.audio-player-container');
         
+        // Use browser's default audio player
         audioPlayer.src = audioUrl;
-        audioContainer.classList.add('has-audio');
         
-        // 存储当前音频数据用于保存
+        // Store audio data for saving
         this.currentAudio = {
             blob: audioBlob,
             url: audioUrl,
             filename: `qwen-tts-${Date.now()}.wav`
         };
-
-        // 自动播放
-        audioPlayer.play().catch(e => console.log('自动播放被阻止:', e));
     }
+
 
     saveAudio(showAlert = true) {
         if (!this.currentAudio) {
@@ -284,6 +495,50 @@ class QwenTTSEngine {
 
     showSettings() {
         document.getElementById('settingsModal').classList.add('show');
+    }
+
+    handleInvalidApiKey() {
+        // 清除无效的API密钥
+        localStorage.removeItem('qwen_tts_api_key');
+        this.apiKey = null;
+        
+        // 显示API密钥输入框
+        setTimeout(() => {
+            this.showApiKeyModal();
+            
+            // 在API密钥输入框中添加提示信息
+            const apiKeyInput = document.getElementById('apiKeyInput');
+            if (apiKeyInput) {
+                const modalContent = document.querySelector('#apiKeyModal .modal-content');
+                if (modalContent) {
+                    // 移除之前的错误提示
+                    const existingError = modalContent.querySelector('.error-message');
+                    if (existingError) {
+                        existingError.remove();
+                    }
+                    
+                    // 添加错误提示
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message';
+                    errorDiv.style.cssText = `
+                        background: var(--danger-light);
+                        color: var(--danger-color);
+                        padding: 12px;
+                        border-radius: 8px;
+                        margin-bottom: 15px;
+                        border-left: 4px solid var(--danger-color);
+                        font-size: 14px;
+                    `;
+                    errorDiv.innerHTML = `
+                        <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+                        API密钥无效或已过期，请重新输入有效的API密钥
+                    `;
+                    
+                    modalContent.insertBefore(errorDiv, modalContent.firstChild);
+                    apiKeyInput.focus();
+                }
+            }
+        }, 100);
     }
 
     updateTheme(color) {

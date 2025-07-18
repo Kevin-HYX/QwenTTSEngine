@@ -1,18 +1,40 @@
 :root {
     --primary-color: #007bff;
+    --primary-hover: #0056b3;
+    --primary-light: rgba(0, 123, 255, 0.1);
+    --primary-shadow: rgba(0, 123, 255, 0.3);
+    --primary-text: #ffffff;
+    
     --secondary-color: #6c757d;
+    --secondary-hover: #545b62;
+    --secondary-light: rgba(108, 117, 125, 0.1);
+    --secondary-shadow: rgba(108, 117, 125, 0.3);
+    
     --success-color: #28a745;
+    --success-hover: #1e7e34;
     --danger-color: #dc3545;
+    --danger-hover: #c82333;
     --warning-color: #ffc107;
+    --warning-hover: #e0a800;
     --info-color: #17a2b8;
+    --info-hover: #138496;
+    
     --light-color: #f8f9fa;
+    --light-hover: #e2e6ea;
     --dark-color: #343a40;
+    --dark-hover: #23272b;
+    
     --border-color: #dee2e6;
+    --border-hover: #adb5bd;
     --background-color: #ffffff;
+    --background-secondary: #f8f9fa;
     --text-color: #212529;
+    --text-secondary: #6c757d;
+    --text-muted: #868e96;
     
     --border-radius: 12px;
     --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    --box-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.15);
     --transition: all 0.3s ease;
 }
 
@@ -69,8 +91,9 @@ body {
 
 .icon-btn:hover {
     background: var(--primary-color);
-    color: white;
+    color: var(--primary-text);
     transform: translateY(-1px);
+    box-shadow: var(--box-shadow-hover);
 }
 
 .voice-select {
@@ -87,7 +110,7 @@ body {
 .voice-select:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 /* 文本输入区 */
@@ -98,7 +121,7 @@ body {
 
 .text-input {
     width: 100%;
-    min-height: 120px;
+    min-height: 200px;
     padding: 16px;
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
@@ -112,7 +135,7 @@ body {
 .text-input:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 .text-input::placeholder {
@@ -134,6 +157,8 @@ body {
 .char-counter.error {
     color: var(--danger-color);
     font-weight: bold;
+    background: rgba(220, 53, 69, 0.1);
+    color: var(--danger-hover);
 }
 
 /* 底部操作区 */
@@ -155,18 +180,6 @@ body {
     border-radius: var(--border-radius);
 }
 
-.audio-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 40px;
-    background: var(--light-color);
-    border: 1px dashed var(--border-color);
-    border-radius: var(--border-radius);
-    color: var(--secondary-color);
-    font-size: 14px;
-    gap: 8px;
-}
 
 .button-group {
     position: relative;
@@ -260,12 +273,14 @@ body {
 .modal-content {
     background: var(--background-color);
     border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    padding: 30px;
-    max-width: 400px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    padding: 40px;
+    max-width: 520px;
     width: 90%;
     max-height: 80vh;
     overflow-y: auto;
+    border: 1px solid var(--border-color);
+    position: relative;
 }
 
 .settings-modal {
@@ -489,17 +504,55 @@ body {
     animation: fadeIn 0.3s ease;
 }
 
-/* 状态样式 */
-.audio-player-container.has-audio .audio-placeholder {
-    display: none;
-}
-
-.audio-player-container.has-audio .audio-player {
-    display: block;
-}
 
 .generate-btn:disabled .dropdown-icon {
     display: none;
+}
+
+/* 密码切换按钮样式 */
+.password-toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    color: var(--text-secondary);
+    font-size: 16px;
+    transition: var(--transition);
+    outline: none;
+}
+
+.password-toggle-btn:hover {
+    color: var(--primary-color);
+    transform: scale(1.1);
+}
+
+.password-toggle-btn:active {
+    transform: scale(0.9);
+}
+
+/* 验证状态样式 */
+.validation-status, .validation-success, .validation-error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* 输入框验证状态 */
+#apiKeyInput:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+#apiKeyInput.error {
+    border-color: var(--danger-color);
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
+#apiKeyInput.success {
+    border-color: var(--success-color);
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
 }
 
 /* 深色模式支持 */
@@ -515,4 +568,5 @@ body {
     body {
         background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
     }
+
 }

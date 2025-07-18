@@ -12,15 +12,33 @@
         <!-- API密钥弹窗 -->
         <div id="apiKeyModal" class="modal">
             <div class="modal-content">
-                <h3>请输入API密钥</h3>
-                <p>首次使用需要输入阿里云百炼平台的API密钥</p>
-                <input type="password" id="apiKeyInput" placeholder="输入您的API密钥">
-                <div class="modal-buttons">
-                    <button id="saveApiKey" class="btn-primary">保存</button>
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h3 style="color: var(--primary-color); margin-bottom: 10px; font-size: 24px;">
+                        <i class="fas fa-key" style="margin-right: 10px;"></i>API密钥配置
+                    </h3>
+                    <p id="apiKeyMessage" style="color: var(--text-secondary); font-size: 16px; margin: 0;">
+                        首次使用需要输入阿里云百炼平台的API密钥
+                    </p>
                 </div>
-                <p class="help-text">
-                    <a href="https://bailian.console.aliyun.com/" target="_blank">获取API密钥</a>
-                </p>
+                
+                <div style="margin-bottom: 25px;">
+                    <input type="password" id="apiKeyInput" placeholder="请输入您的API密钥" 
+                           style="width: 100%; padding: 16px 20px; font-size: 16px; border: 2px solid var(--border-color); 
+                                  border-radius: var(--border-radius); transition: var(--transition);
+                                  background: var(--background-secondary);">
+                </div>
+                <div class="modal-buttons" style="justify-content: space-between; align-items: center;">
+                    <p class="help-text" style="margin: 0; font-size: 14px;">
+                        <a href="https://bailian.console.aliyun.com/" target="_blank" style="text-decoration: none;">
+                            <i class="fas fa-external-link-alt" style="margin-right: 5px; font-size: 12px;"></i>
+                            获取API密钥
+                        </a>
+                    </p>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="closeApiKeyModal" class="btn-secondary" style="display: none; min-width: 100px;">不是现在</button>
+                        <button id="saveApiKey" class="btn-primary" style="min-width: 80px;">保存</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -59,13 +77,9 @@
             <!-- 底部操作区 -->
             <div class="bottom-row">
                 <div class="audio-player-container">
-                    <audio id="audioPlayer" class="audio-player" controls style="display: none;">
+                    <audio id="audioPlayer" class="audio-player" controls>
                         您的浏览器不支持音频播放。
                     </audio>
-                    <div id="audioPlaceholder" class="audio-placeholder">
-                        <i class="fas fa-volume-up"></i>
-                        <span>生成后将在此处播放音频</span>
-                    </div>
                 </div>
                 
                 <div class="button-group">

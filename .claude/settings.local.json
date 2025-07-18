@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(QWEN_TTS_API_KEY=sk-71ff6f55ecb549ecb209a6b282fd382e node tests/api-tests.js)"
     ],
     "deny": []
   }

@@ -1,0 +1,161 @@
+请求体
+非流式输出流式输出
+PythonJavacurl
+ 
+# DashScope SDK 版本不低于 1.23.1
+import os
+import dashscope
+
+text = "那我来给大家推荐一款T恤，这款呢真的是超级好看，这个颜色呢很显气质，而且呢也是搭配的绝佳单品，大家可以闭眼入，真的是非常好看，对身材的包容性也很好，不管啥身材的宝宝呢，穿上去都是很好看的。推荐宝宝们下单哦。"
+response = dashscope.audio.qwen_tts.SpeechSynthesizer.call(
+    model="qwen-tts",
+    api_key=os.getenv("DASHSCOPE_API_KEY"),
+    text=text,
+    voice="Cherry",
+)
+print(response)
+model string （必选）
+
+模型名称，支持的模型请参见Qwen-TTS。
+
+text string （必选）
+
+要合成的文本，支持中文、英文、中英混合输入。最长输入为512 Token。
+
+voice string （必选）
+
+使用的音色，可选值：
+
+Cherry
+
+Serena
+
+Ethan
+
+Chelsie
+
+qwen-tts-2025-05-22 与 qwen-tts-latest 还支持以下三种音色：
+
+Dylan
+
+Jada
+
+Sunny
+
+2.20.7 及以上版本的 Java SDK 支持设定以上三种音色。
+stream boolean （可选）默认值为 false
+
+是否流式输出回复。参数值：
+
+模型生成完后返回音频的 URL。
+
+边生成边输出 Base64 编码格式的音频数据。您需要实时地逐个读取这些片段以获得完整的结果。请参见：实时播放。
+
+该参数仅支持Python SDK。通过Java SDK实现流式输出请通过streamCall接口调用；通过HTTP实现流式输出请在Header中指定X-DashScope-SSE为enable。
+返回对象（流式与非流式输出格式一致）
+ 
+{
+    "output": {
+        "finish_reason": "stop",
+        "audio": {
+            "expires_at": 1745053690,
+            "data": "",
+            "id": "audio_1028b3b5-5320-9a75-b3fb-f0bcba2a390d",
+            "url": "http://dashscope-result-wlcb.oss-cn-wulanchabu.aliyuncs.com/1d/8b/20250418/2413932e/af45d651-f632-4c4a-91d5-59077447adcc.wav?Expires=1745053690&OSSAccessKeyId=xxx&Signature=wntwl%xxx%3D"
+        }
+    },
+    "usage": {
+        "input_tokens_details": {
+            "text_tokens": 76
+        },
+        "total_tokens": 1158,
+        "output_tokens": 1082,
+        "input_tokens": 76,
+        "output_tokens_details": {
+            "audio_tokens": 1082,
+            "text_tokens": 0
+        }
+    },
+    "request_id": "1028b3b5-5320-9a75-b3fb-f0bcba2a390d"
+}
+output object
+
+模型的输出。
+
+属性
+
+finish_reason string
+
+有两种情况：
+
+正在生成时为"null"；
+
+因模型输出自然结束，或触发输入参数中的stop条件而结束时为"stop"。
+
+audio object
+
+模型输出的音频信息。
+
+属性
+
+url string
+
+模型输出的完整音频文件的URL，有效期24小时。
+
+data string
+
+流式输出时的Base64 音频数据。
+
+id string
+
+模型输出的音频信息对应的ID。
+
+expires_at integer
+
+url 将要过期的时间戳。
+
+usage object
+
+本次请求的 Token 消耗信息。
+
+属性
+
+input_tokens_details object
+
+输入文本的 Token 消耗信息。
+
+属性
+
+text_tokens integer
+
+输入文本的 Token 消耗量。
+
+total_tokens integer
+
+本次请求总共消耗的 Token 量。
+
+output_tokens integer
+
+输出音频的 Token 消耗量。
+
+input_tokens integer
+
+输入文本的 Token 消耗量。
+
+output_tokens_details object
+
+输出的 Token 消耗信息。
+
+属性
+
+audio_tokens integer
+
+输出音频的 Token 消耗量。
+
+text_tokens integer
+
+输出文本的 Token 消耗量，当前固定为0。
+
+request_id string
+
+本次请求的 ID。
