@@ -1,0 +1,66 @@
+```mermaid
+graph TD
+    Start([用户启动应用]) --> Init[初始化应用]
+    Init --> CheckKey{检查API密钥}
+    
+    CheckKey -->|未设置| PromptKey[弹出API密钥输入框]
+    CheckKey -->|已设置| LoadApp[加载主界面]
+    
+    PromptKey --> SaveKey[保存密钥到本地存储]
+    SaveKey --> LoadApp
+    
+    LoadApp --> RenderUI[渲染三行布局界面]
+    
+    RenderUI --> TopRow[顶部控制栏]
+    RenderUI --> MiddleRow[文本输入区]
+    RenderUI --> BottomRow[底部操作区]
+    
+    TopRow --> SettingsBtn[设置按钮]
+    TopRow --> VoiceSelect[音色选择下拉菜单]
+    
+    MiddleRow --> TextInput[文本输入框]
+    TextInput --> CharCounter[字符计数器 45/512]
+    CharCounter --> ValidateLength{验证长度}
+    ValidateLength -->|≤512| EnableGen[启用生成按钮]
+    ValidateLength -->|>512| DisableGen[禁用生成按钮并变红]
+    
+    BottomRow --> AudioPlayer[音频播放器]
+    BottomRow --> GenButton[生成按钮]
+    
+    GenButton -->|点击| CheckText{检查文本}
+    CheckText -->|空文本| DisableAction[保持禁用状态]
+    CheckText -->|有文本| CheckAudio{检查是否有未保存音频}
+    
+    CheckAudio -->|有未保存| ShowSavePrompt[显示保存提示]
+    ShowSavePrompt -->|用户选择保存| SaveAudio[保存音频文件]
+    ShowSavePrompt -->|用户选择放弃| ProceedGen[继续生成]
+    ShowSavePrompt -->|不再提示| SetNoPrompt[设置不再提示并继续]
+    
+    CheckAudio -->|无未保存| ProceedGen
+    
+    ProceedGen --> CallAPI[调用千问TTS API]
+    CallAPI --> API[阿里云百炼平台<br>qwen-tts模型]
+    
+    API -->|返回音频数据| ReceiveAudio[接收音频数据]
+    ReceiveAudio --> EnablePlayer[启用音频播放器]
+    EnablePlayer --> UpdateUI[更新界面状态]
+    
+    SettingsBtn -->|点击| OpenSettings[打开设置页面]
+    OpenSettings --> ThemeConfig[主题颜色配置]
+    OpenSettings --> OtherSettings[其他设置选项]
+    
+    VoiceSelect -->|选择音色| UpdateVoice[更新当前音色]
+    
+    AudioPlayer -->|播放控制| PlayPause[播放/暂停]
+    AudioPlayer -->|进度条| Seek[调整播放进度]
+    
+    GenButton -->|下拉箭头| ShowDropdown[显示下拉菜单]
+    ShowDropdown --> SaveOption[保存选项]
+    SaveOption --> SaveFile[保存音频到本地文件]
+    
+    style Start fill:#90EE90
+    style API fill:#FFB6C1
+    style AudioPlayer fill:#87CEEB
+    style TextInput fill:#DDA0DD
+    style SettingsBtn fill:#F0E68C
+```

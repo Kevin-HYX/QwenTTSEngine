@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwen TTS Engine - 千问文本转语音引擎</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- API密钥弹窗 -->
+        <div id="apiKeyModal" class="modal">
+            <div class="modal-content">
+                <h3>请输入API密钥</h3>
+                <p>首次使用需要输入阿里云百炼平台的API密钥</p>
+                <input type="password" id="apiKeyInput" placeholder="输入您的API密钥">
+                <div class="modal-buttons">
+                    <button id="saveApiKey" class="btn-primary">保存</button>
+                </div>
+                <p class="help-text">
+                    <a href="https://bailian.console.aliyun.com/" target="_blank">获取API密钥</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- 主界面 -->
+        <div id="mainApp" class="main-app" style="display: none;">
+            <!-- 顶部控制栏 -->
+            <div class="top-row">
+                <button id="settingsBtn" class="icon-btn" title="设置">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <select id="voiceSelect" class="voice-select">
+                    <option value="">选择音色...</option>
+                    <option value="Chelsie">Chelsie - 标准女声</option>
+                    <option value="Cherry">Cherry - 标准女声</option>
+                    <option value="Serena">Serena - 标准女声</option>
+                    <option value="Ethan">Ethan - 标准男声</option>
+                    <option value="Dylan">Dylan - 北京话男声</option>
+                    <option value="Jada">Jada - 吴语女声</option>
+                    <option value="Sunny">Sunny - 四川话女声</option>
+                </select>
+            </div>
+
+            <!-- 文本输入区 -->
+            <div class="middle-row">
+                <textarea 
+                    id="textInput" 
+                    class="text-input" 
+                    placeholder="请输入要转换为语音的文本（最多512个字符）..."
+                    maxlength="512"
+                ></textarea>
+                <div class="char-counter">
+                    <span id="charCount">0</span>/512
+                </div>
+            </div>
+
+            <!-- 底部操作区 -->
+            <div class="bottom-row">
+                <div class="audio-player-container">
+                    <audio id="audioPlayer" class="audio-player" controls style="display: none;">
+                        您的浏览器不支持音频播放。
+                    </audio>
+                    <div id="audioPlaceholder" class="audio-placeholder">
+                        <i class="fas fa-volume-up"></i>
+                        <span>生成后将在此处播放音频</span>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button id="generateBtn" class="generate-btn" disabled>
+                        <span>生成</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </button>
+                    <div id="generateDropdown" class="dropdown-menu" style="display: none;">
+                        <button id="saveAudioBtn" class="dropdown-item">
+                            <i class="fas fa-download"></i>
+                            保存音频
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 设置弹窗 -->
+        <div id="settingsModal" class="modal">
+            <div class="modal-content settings-modal">
+                <div class="modal-header">
+                    <h3>设置</h3>
+                    <button id="closeSettings" class="close-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="setting-item">
+                        <label for="themeColor">主题颜色</label>
+                        <input type="color" id="themeColor" value="#007bff">
+                    </div>
+                    <div class="setting-item">
+                        <label for="apiKeyReset">API密钥</label>
+                        <button id="apiKeyReset" class="btn-secondary">重新设置API密钥</button>
+                    </div>
+                    <div class="setting-item">
+                        <label>关于</label>
+                        <p>Qwen TTS Engine v1.0.0</p>
+                        <p>基于阿里云千问TTS模型构建</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 保存确认弹窗 -->
+        <div id="saveConfirmModal" class="modal">
+            <div class="modal-content">
+                <h3>确认保存</h3>
+                <p>当前音频未保存，是否要先保存？</p>
+                <div class="modal-buttons">
+                    <button id="confirmSave" class="btn-primary">保存</button>
+                    <button id="confirmDiscard" class="btn-secondary">不保存</button>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="dontAskAgain">
+                        不再提示
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- 加载提示 -->
+        <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+            <div class="loading-spinner">
+                <i class="fas fa-circle-notch fa-spin"></i>
+                <p>正在生成音频...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
